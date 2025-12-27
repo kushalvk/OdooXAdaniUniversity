@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import {
   Wrench, Download, Filter,
   TrendingUp, CheckCircle, Clock,
@@ -7,6 +8,10 @@ import {
   ChevronDown, X
 } from 'lucide-react';
 import MainNavigation from '../components/common/MainNavigation';
+=======
+import { fetchDashboardData, fetchMaintenanceTrends } from '../api/analytics.api';
+import { toast } from 'react-toastify';
+>>>>>>> 606d3591d6f46968af34b1072caf8be5fd7adc6e
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -19,8 +24,22 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Line, Bar, Pie } from 'react-chartjs-2';
-import { toast } from 'react-toastify';
+import { Line, Pie, Bar } from 'react-chartjs-2';
+import {
+  Wrench,
+  Settings,
+  ChevronDown,
+  Filter,
+  Download,
+  FileText,
+  CheckCircle,
+  Clock,
+  TrendingUp,
+  LineChart,
+  PieChart,
+  BarChart3,
+  X,
+} from 'lucide-react';
 
 ChartJS.register(
   CategoryScale,
@@ -34,123 +53,59 @@ ChartJS.register(
   Legend
 );
 
+
 export default function Reporting({ user, onLogout }) {
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState('last30days');
   const [showFilters, setShowFilters] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Set to true initially to load data on mount
+  const [error, setError] = useState(null);
 
+<<<<<<< HEAD
   // Mock data - replace with API calls
+=======
+  const tabs = ['Maintenance', 'Dashboard', 'Maintenance Calendar', 'Equipment', 'Reporting', 'Teams'];
+
+>>>>>>> 606d3591d6f46968af34b1072caf8be5fd7adc6e
   const [reportData, setReportData] = useState({
-    totalRequests: 156,
-    completedRequests: 128,
-    inProgressRequests: 18,
-    pendingRequests: 10,
-    averageResponseTime: 2.4,
-    averageCompletionTime: 5.2,
-    criticalIssues: 5,
-    equipmentHealth: 87
+    totalRequests: 0,
+    completedRequests: 0,
+    inProgressRequests: 0,
+    pendingRequests: 0,
+    averageResponseTime: 0,
+    averageCompletionTime: 0,
+    criticalIssues: 0,
+    equipmentHealth: 0,
+    responseTimeBreakdown: { average: 0, fastest: 0, slowest: 0 },
+    completionStats: { average: 0, completionRate: 0, onTimeCompletion: 0 },
+    priorityDistribution: { critical: 0, high: 0, medium: 0, low: 0 },
+    recentActivity: {
+      thisWeek: { completed: 0, inProgress: 0, vsLastWeek: '0%' },
+      thisMonth: { completed: 0, inProgress: 0, vsLastMonth: '0%' },
+      equipmentStatus: { healthy: 0, criticalIssues: 0, vsLastMonth: '0%' },
+    },
   });
 
-  // Maintenance requests by status
-  const statusData = {
+  const [statusData, setStatusData] = useState({
     labels: ['Completed', 'In Progress', 'Pending', 'Scrapped'],
-    datasets: [
-      {
-        label: 'Requests',
-        data: [128, 18, 10, 5],
-        backgroundColor: [
-          'rgba(34, 197, 94, 0.8)',
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(234, 179, 8, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-        ],
-        borderColor: [
-          'rgb(34, 197, 94)',
-          'rgb(59, 130, 246)',
-          'rgb(234, 179, 8)',
-          'rgb(239, 68, 68)',
-        ],
-        borderWidth: 2,
-      },
-    ],
-  };
+    datasets: [{ label: 'Requests', data: [], backgroundColor: [], borderColor: [], borderWidth: 2 }],
+  });
 
-  // Requests by category
-  const categoryData = {
-    labels: ['Computers', 'HVAC', 'Electrical', 'Network', 'Office Equipment'],
-    datasets: [
-      {
-        label: 'Requests',
-        data: [45, 32, 28, 25, 26],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(168, 85, 247, 0.8)',
-          'rgba(234, 179, 8, 0.8)',
-          'rgba(34, 197, 94, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-        ],
-        borderColor: [
-          'rgb(59, 130, 246)',
-          'rgb(168, 85, 247)',
-          'rgb(234, 179, 8)',
-          'rgb(34, 197, 94)',
-          'rgb(239, 68, 68)',
-        ],
-        borderWidth: 2,
-      },
-    ],
-  };
+  const [categoryData, setCategoryData] = useState({
+    labels: [],
+    datasets: [{ label: 'Requests', data: [], backgroundColor: [], borderColor: [], borderWidth: 2 }],
+  });
 
-  // Monthly trend
-  const monthlyTrendData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    datasets: [
-      {
-        label: 'Completed',
-        data: [12, 15, 18, 14, 16, 20, 22, 19, 21, 18, 16, 14],
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        tension: 0.4,
-      },
-      {
-        label: 'In Progress',
-        data: [5, 7, 6, 8, 9, 7, 8, 6, 7, 5, 4, 3],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4,
-      },
-      {
-        label: 'Pending',
-        data: [3, 2, 4, 3, 5, 4, 3, 2, 3, 4, 5, 6],
-        borderColor: 'rgb(234, 179, 8)',
-        backgroundColor: 'rgba(234, 179, 8, 0.1)',
-        tension: 0.4,
-      },
-    ],
-  };
+  const [monthlyTrendData, setMonthlyTrendData] = useState({
+    labels: [],
+    datasets: [],
+  });
 
-  // Performance metrics
-  const performanceData = {
-    labels: ['Response Time (h)', 'Resolution Time (h)', 'First Contact (h)', 'SLA Compliance (%)'],
-    datasets: [
-      {
-        label: 'Current Month',
-        data: [2.4, 5.2, 1.8, 92],
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 2,
-      },
-      {
-        label: 'Last Month',
-        data: [2.8, 5.8, 2.1, 88],
-        backgroundColor: 'rgba(168, 85, 247, 0.8)',
-        borderColor: 'rgb(168, 85, 247)',
-        borderWidth: 2,
-      },
-    ],
-  };
+  const [performanceData, setPerformanceData] = useState({
+    labels: [],
+    datasets: [],
+  });
 
   const chartOptions = {
     responsive: true,
@@ -220,9 +175,54 @@ export default function Reporting({ user, onLogout }) {
   };
 
   useEffect(() => {
-    // TODO: Fetch report data from API
-    // fetchReportData(dateRange, categoryFilter);
+    const getReportData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const dashboardResponse = await fetchDashboardData();
+        setReportData(dashboardResponse);
+
+        const trendsResponse = await fetchMaintenanceTrends(dateRange, categoryFilter);
+        if (trendsResponse.monthlyTrendData) setMonthlyTrendData(trendsResponse.monthlyTrendData);
+        if (trendsResponse.statusData) setStatusData(trendsResponse.statusData);
+        if (trendsResponse.categoryData) setCategoryData(trendsResponse.categoryData);
+        if (trendsResponse.performanceData) setPerformanceData(trendsResponse.performanceData);
+
+      } catch (err) {
+        console.error('Failed to fetch report data:', err);
+        setError(err);
+        toast.error('Failed to load report data: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getReportData();
   }, [dateRange, categoryFilter]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24 mb-4"></div>
+          <p className="text-xl">Loading Report Data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 text-xl mb-4">Error loading data.</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100">
@@ -413,15 +413,15 @@ export default function Reporting({ user, onLogout }) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Average Response</span>
-                <span className="text-white font-semibold">2.4 hours</span>
+                <span className="text-white font-semibold">{reportData.responseTimeBreakdown.average} hours</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Fastest Response</span>
-                <span className="text-green-400 font-semibold">0.5 hours</span>
+                <span className="text-green-400 font-semibold">{reportData.responseTimeBreakdown.fastest} hours</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Slowest Response</span>
-                <span className="text-red-400 font-semibold">8.2 hours</span>
+                <span className="text-red-400 font-semibold">{reportData.responseTimeBreakdown.slowest} hours</span>
               </div>
             </div>
           </div>
@@ -431,15 +431,15 @@ export default function Reporting({ user, onLogout }) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Average Completion</span>
-                <span className="text-white font-semibold">5.2 hours</span>
+                <span className="text-white font-semibold">{reportData.completionStats.average} hours</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Completion Rate</span>
-                <span className="text-green-400 font-semibold">82%</span>
+                <span className="text-green-400 font-semibold">{reportData.completionStats.completionRate}%</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">On-Time Completion</span>
-                <span className="text-blue-400 font-semibold">92%</span>
+                <span className="text-blue-400 font-semibold">{reportData.completionStats.onTimeCompletion}%</span>
               </div>
             </div>
           </div>
@@ -449,19 +449,19 @@ export default function Reporting({ user, onLogout }) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Critical</span>
-                <span className="text-red-400 font-semibold">5 (3%)</span>
+                <span className="text-red-400 font-semibold">{reportData.priorityDistribution.critical} ({((reportData.priorityDistribution.critical / reportData.totalRequests) * 100).toFixed(0)}%)</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">High</span>
-                <span className="text-orange-400 font-semibold">32 (21%)</span>
+                <span className="text-orange-400 font-semibold">{reportData.priorityDistribution.high} ({((reportData.priorityDistribution.high / reportData.totalRequests) * 100).toFixed(0)}%)</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Medium</span>
-                <span className="text-yellow-400 font-semibold">89 (57%)</span>
+                <span className="text-yellow-400 font-semibold">{reportData.priorityDistribution.medium} ({((reportData.priorityDistribution.medium / reportData.totalRequests) * 100).toFixed(0)}%)</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Low</span>
-                <span className="text-green-400 font-semibold">30 (19%)</span>
+                <span className="text-green-400 font-semibold">{reportData.priorityDistribution.low} ({((reportData.priorityDistribution.low / reportData.totalRequests) * 100).toFixed(0)}%)</span>
               </div>
             </div>
           </div>
@@ -477,30 +477,30 @@ export default function Reporting({ user, onLogout }) {
               <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg">
                 <div>
                   <p className="text-white font-medium">This Week</p>
-                  <p className="text-gray-400 text-sm">45 requests completed, 12 in progress</p>
+                  <p className="text-gray-400 text-sm">{reportData.recentActivity.thisWeek.completed} requests completed, {reportData.recentActivity.thisWeek.inProgress} in progress</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-cyan-400 font-semibold">+15%</p>
+                  <p className="text-cyan-400 font-semibold">{reportData.recentActivity.thisWeek.vsLastWeek}</p>
                   <p className="text-gray-400 text-sm">vs last week</p>
                 </div>
               </div>
               <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg">
                 <div>
                   <p className="text-white font-medium">This Month</p>
-                  <p className="text-gray-400 text-sm">156 requests completed, 18 in progress</p>
+                  <p className="text-gray-400 text-sm">{reportData.recentActivity.thisMonth.completed} requests completed, {reportData.recentActivity.thisMonth.inProgress} in progress</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-cyan-400 font-semibold">+8%</p>
+                  <p className="text-cyan-400 font-semibold">{reportData.recentActivity.thisMonth.vsLastMonth}</p>
                   <p className="text-gray-400 text-sm">vs last month</p>
                 </div>
               </div>
               <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg">
                 <div>
                   <p className="text-white font-medium">Equipment Status</p>
-                  <p className="text-gray-400 text-sm">87% healthy, 5 critical issues</p>
+                  <p className="text-gray-400 text-sm">{reportData.recentActivity.equipmentStatus.healthy}% healthy, {reportData.recentActivity.equipmentStatus.criticalIssues} critical issues</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-green-400 font-semibold">+2%</p>
+                  <p className="text-green-400 font-semibold">{reportData.recentActivity.equipmentStatus.vsLastMonth}</p>
                   <p className="text-gray-400 text-sm">vs last month</p>
                 </div>
               </div>
