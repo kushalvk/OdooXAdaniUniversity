@@ -1,4 +1,6 @@
 const MaintenanceRequest = require('../models/MaintenanceRequest');
+const User = require('../models/User');
+const Equipment = require('../models/Equipment');
 
 // @desc    Get calendar events (maintenance requests with scheduled dates)
 // @route   GET /api/analytics/calendar-events
@@ -172,6 +174,7 @@ const createSampleEvents = async (req, res) => {
 // Exported at end of file after all functions are declared
 
 const getDashboardData = async (req, res) => {
+<<<<<<< HEAD
   try {
     // Basic counts
     const totalRequests = await MaintenanceRequest.countDocuments();
@@ -269,6 +272,106 @@ const getDashboardData = async (req, res) => {
       } catch (e) {
         // ignore
       }
+=======
+    try {
+        const userId = req.user._id; // Assuming req.user is set by auth middleware
+
+        // Get current date and date ranges
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        // Fetch recent requests (last 10)
+        const recentRequests = await MaintenanceRequest.find()
+            .populate('equipment', 'name')
+            .populate('technician', 'firstName lastName')
+            .sort({ createdAt: -1 })
+            .limit(10);
+
+        // Fetch upcoming maintenance (next 7 days)
+        const upcomingMaintenance = await MaintenanceRequest.find({
+            scheduledDate: {
+                $gte: now,
+                $lte: sevenDaysFromNow
+            }
+        })
+        .populate('equipment', 'name')
+        .populate('technician', 'firstName lastName')
+        .sort({ scheduledDate: 1 });
+
+        // Calculate statistics
+        const totalRequests = await MaintenanceRequest.countDocuments();
+        const completedRequests = await MaintenanceRequest.countDocuments({ status: 'Repaired' });
+        const pendingRequests = await MaintenanceRequest.countDocuments({ status: 'New' });
+        const inProgressRequests = await MaintenanceRequest.countDocuments({ status: 'In Progress' });
+        const overdueRequests = await MaintenanceRequest.countDocuments({
+            status: { $nin: ['Repaired', 'Scrap'] },
+            scheduledDate: { $lt: now, $exists: true }
+        });
+
+        // Completed today
+        const completedToday = await MaintenanceRequest.countDocuments({
+            status: 'Repaired',
+            updatedAt: { $gte: today }
+        });
+
+        // Equipment under repair (assuming status indicates repair)
+        const underRepairEquipment = await MaintenanceRequest.countDocuments({
+            status: 'In Progress'
+        });
+
+        // Technician utilization (count distinct technicians with active requests)
+        const activeTechnicians = await MaintenanceRequest.distinct('technician', {
+            status: 'In Progress'
+        });
+        // Total technicians (users who have been assigned as technicians in any request)
+        const allTechnicians = await MaintenanceRequest.distinct('technician');
+        const totalTechnicians = allTechnicians.filter(id => id).length; // Filter out nulls
+        const technicianUtilization = totalTechnicians > 0 ? Math.round((activeTechnicians.filter(id => id).length / totalTechnicians) * 100) : 0;
+
+        // Average response time (placeholder - would need more complex calculation)
+        const avgResponseTime = 2.4; // Placeholder
+
+        // Equipment health (percentage of equipment not in critical status)
+        const totalEquipment = await Equipment.countDocuments();
+        const criticalEquipment = underRepairEquipment; // Simplified - equipment with active requests
+        const equipmentHealth = totalEquipment > 0 ? Math.max(0, Math.round(((totalEquipment - criticalEquipment) / totalEquipment) * 100)) : 100;
+
+        const dashboardData = {
+            statistics: {
+                underRepairEquipment,
+                technicianUtilization,
+                pendingRequests,
+                overdueRequests,
+                completedToday,
+                avgResponseTime,
+                activeTechnicians: activeTechnicians.length,
+                totalTechnicians,
+                equipmentHealth
+            },
+            recentRequests: recentRequests.map(req => ({
+                _id: req._id,
+                subject: req.subject,
+                equipment: req.equipment,
+                technician: req.technician,
+                priority: req.priority,
+                status: req.status,
+                createdAt: req.createdAt
+            })),
+            upcomingMaintenance: upcomingMaintenance.map(req => ({
+                _id: req._id,
+                subject: req.subject,
+                equipment: req.equipment,
+                technician: req.technician,
+                scheduledDate: req.scheduledDate
+            }))
+        };
+
+        res.status(200).json(dashboardData);
+    } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        res.status(500).json({ message: 'Server error fetching dashboard data' });
+>>>>>>> 3120646939056a49ba238173ac19d83f77632f05
     }
 
     const dashboardData = {
