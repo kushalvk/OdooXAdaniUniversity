@@ -140,6 +140,67 @@ export default function Reporting({ user, onLogout }) {
     },
   };
 
+  // Helpers to normalize chart data from backend
+  const colors = ['#06b6d4', '#3b82f6', '#f59e0b', '#ef4444', '#10b981', '#a78bfa'];
+
+  const addAlpha = (hex, alpha = 0.15) => {
+    // hex like #rrggbb -> rgba
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  const normalizeLineData = (raw) => {
+    if (!raw || !raw.labels || !Array.isArray(raw.datasets)) return { labels: [], datasets: [] };
+    const labels = raw.labels;
+    const datasets = raw.datasets.map((ds, i) => ({
+      label: ds.label || `Series ${i + 1}`,
+      data: Array.isArray(ds.data) ? ds.data : [],
+      borderColor: ds.borderColor || colors[i % colors.length],
+      backgroundColor: ds.backgroundColor || addAlpha(colors[i % colors.length], 0.12),
+      tension: ds.tension ?? 0.35,
+      fill: ds.fill ?? false,
+    }));
+    return { labels, datasets };
+  };
+
+  const normalizeBarData = (raw) => {
+    if (!raw || !raw.labels || !Array.isArray(raw.datasets)) return { labels: [], datasets: [] };
+    const labels = raw.labels;
+    const datasets = raw.datasets.map((ds, i) => ({
+      label: ds.label || `Series ${i + 1}`,
+      data: Array.isArray(ds.data) ? ds.data : [],
+      backgroundColor: ds.backgroundColor || addAlpha(colors[i % colors.length], 0.18),
+      borderColor: ds.borderColor || colors[i % colors.length],
+      borderWidth: ds.borderWidth ?? 1,
+    }));
+    return { labels, datasets };
+  };
+
+  const normalizePieData = (raw) => {
+    if (!raw) return { labels: [], datasets: [] };
+    const labels = raw.labels || [];
+    // If datasets is provided use first dataset, otherwise try to build from value map
+    let datasets = [];
+    if (Array.isArray(raw.datasets) && raw.datasets.length > 0) {
+      const ds = raw.datasets[0];
+      const data = Array.isArray(ds.data) ? ds.data : [];
+      const bg = ds.backgroundColor && ds.backgroundColor.length === data.length
+        ? ds.backgroundColor
+        : data.map((_, idx) => addAlpha(colors[idx % colors.length], 0.8));
+      datasets = [{ label: ds.label || 'Series', data, backgroundColor: bg, borderColor: ds.borderColor || colors.slice(0, data.length) }];
+    } else if (raw.valueMap) {
+      const entries = Object.entries(raw.valueMap);
+      const data = entries.map(e => e[1]);
+      const labelsFromMap = entries.map(e => e[0]);
+      const bg = data.map((_, idx) => addAlpha(colors[idx % colors.length], 0.8));
+      datasets = [{ label: 'Distribution', data, backgroundColor: bg, borderColor: colors.slice(0, data.length) }];
+      return { labels: labelsFromMap, datasets };
+    }
+    return { labels, datasets };
+  };
+
   const handleExport = (format) => {
     toast.info(`Exporting report as ${format}...`);
     // TODO: Implement export functionality
@@ -162,10 +223,33 @@ export default function Reporting({ user, onLogout }) {
         setReportData(prev => ({ ...prev, ...dashboardResponse }));
 
         const trendsResponse = await fetchMaintenanceTrends(dateRange, categoryFilter);
-        if (trendsResponse.monthlyTrendData) setMonthlyTrendData(trendsResponse.monthlyTrendData);
-        if (trendsResponse.statusData) setStatusData(trendsResponse.statusData);
-        if (trendsResponse.categoryData) setCategoryData(trendsResponse.categoryData);
-        if (trendsResponse.performanceData) setPerformanceData(trendsResponse.performanceData);
+        // Normalize and set monthly trend (line)
+        if (trendsResponse.monthlyTrendData) {
+          setMonthlyTrendData(normalizeLineData(trendsResponse.monthlyTrendData));
+        } else if (dashboardResponse && dashboardResponse.trends && dashboardResponse.trends.monthlyTrendData) {
+          setMonthlyTrendData(normalizeLineData(dashboardResponse.trends.monthlyTrendData));
+        }
+
+        // Status distribution (pie) - prefer trendsResponse, else derive from dashboardResponse.priorityDistribution
+        if (trendsResponse.statusData) {
+          setStatusData(normalizePieData(trendsResponse.statusData));
+        } else if (dashboardResponse && dashboardResponse.priorityDistribution) {
+          const pd = dashboardResponse.priorityDistribution;
+          const labels = Object.keys(pd).map(k => k.charAt(0).toUpperCase() + k.slice(1));
+          const data = Object.keys(pd).map(k => pd[k] || 0);
+          const bg = data.map((_, idx) => addAlpha(colors[idx % colors.length], 0.8));
+          setStatusData({ labels, datasets: [{ label: 'Priority', data, backgroundColor: bg, borderColor: colors.slice(0, data.length) }] });
+        }
+
+        // Category distribution (bar)
+        if (trendsResponse.categoryData) {
+          setCategoryData(normalizeBarData(trendsResponse.categoryData));
+        }
+
+        // Performance metrics (bar)
+        if (trendsResponse.performanceData) {
+          setPerformanceData(normalizeBarData(trendsResponse.performanceData));
+        }
 
       } catch (err) {
         console.error('Failed to fetch report data:', err);
