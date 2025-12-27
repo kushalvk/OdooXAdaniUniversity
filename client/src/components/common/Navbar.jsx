@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import ProfileButton from './ProfileButton';
+import NotificationCenter from './NotificationCenter';
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -21,7 +22,10 @@ const Header = ({ user, onLogout }) => {
   return (
     <HeaderContainer>
       <Logo>My App</Logo>
-      <ProfileButton user={user} onLogout={onLogout} />
+      <div className="flex items-center space-x-4">
+        <NotificationCenter />
+        <ProfileButton user={user} onLogout={onLogout} />
+      </div>
     </HeaderContainer>
   );
 };

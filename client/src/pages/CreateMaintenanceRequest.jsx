@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-export default function CreateMaintenanceRequest({ user, onLogout }) {
+export default function CreateMaintenanceRequest({ user }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,33 +30,73 @@ export default function CreateMaintenanceRequest({ user, onLogout }) {
   const [teamList, setTeamList] = useState([]);
   const [technicianList, setTechnicianList] = useState([]);
 
-  // Fetch equipment, teams, and technicians (mock for now - replace with API calls)
+  // Fetch equipment, teams, and technicians
   useEffect(() => {
-    // TODO: Replace with actual API calls
-    // Example:
-    // fetchEquipmentList();
-    // fetchTeamList();
-    // fetchTechnicianList();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Authentication token not found. Please log in.');
+      navigate('/login');
+      return;
+    }
+
+    const fetchEquipmentList = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/equipment', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch equipment list');
+        }
+        const data = await response.json();
+        setEquipmentList(data);
+      } catch (error) {
+        toast.error(error.message || 'Error fetching equipment');
+        console.error('Error fetching equipment:', error);
+      }
+    };
+
+    const fetchTeamList = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/teams', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch team list');
+        }
+        const data = await response.json();
+        setTeamList(data);
+      } catch (error) {
+        toast.error(error.message || 'Error fetching teams');
+        console.error('Error fetching teams:', error);
+      }
+    };
+
+    const fetchTechnicianList = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/profile/usernames', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch usernames list');
+        }
+        const data = await response.json();
+        setTechnicianList(data);
+      } catch (error) {
+        toast.error(error.message || 'Error fetching usernames');
+        console.error('Error fetching usernames:', error);
+      }
+    };
     
-    // Mock data for now
-    setEquipmentList([
-      { _id: '1', name: 'Acer Laptop/LP/203/19281928' },
-      { _id: '2', name: 'HP LaserJet Pro Printer' },
-      { _id: '3', name: 'Samsung Monitor 15"' }
-    ]);
-    
-    setTeamList([
-      { _id: '1', teamName: 'Internal Maintenance' },
-      { _id: '2', teamName: 'IT Support Team' },
-      { _id: '3', teamName: 'Hardware Maintenance' }
-    ]);
-    
-    setTechnicianList([
-      { _id: '1', firstName: 'Aka', lastName: 'Foster' },
-      { _id: '2', firstName: 'Mike', lastName: 'Wilson' },
-      { _id: '3', firstName: 'Emily', lastName: 'Brown' }
-    ]);
-  }, []);
+    fetchEquipmentList();
+    fetchTeamList();
+    fetchTechnicianList();
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -116,7 +156,7 @@ export default function CreateMaintenanceRequest({ user, onLogout }) {
         throw new Error(error.message || 'Failed to create maintenance request');
       }
 
-      const result = await response.json();
+      // const result = await response.json();
       toast.success(saveAsDraft ? 'Request saved as draft' : 'Maintenance request created successfully');
       navigate('/maintenance');
     } catch (error) {
@@ -156,7 +196,7 @@ export default function CreateMaintenanceRequest({ user, onLogout }) {
                 className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-cyan-400 transition-all cursor-pointer"
                 title="View Profile"
               >
-                {user ? (user.name ? user.name.charAt(0).toUpperCase() : user.firstName?.charAt(0).toUpperCase() || 'U') : 'U'}
+                {user ? (user.username ? user.username.charAt(0).toUpperCase() : user.firstName?.charAt(0).toUpperCase() || 'U') : 'U'}
               </button>
             </div>
           </div>
@@ -371,7 +411,7 @@ export default function CreateMaintenanceRequest({ user, onLogout }) {
                         <option value="">Select Technician (Optional)</option>
                         {technicianList.map((tech) => (
                           <option key={tech._id} value={tech._id}>
-                            {tech.firstName} {tech.lastName}
+                            {tech.username}
                           </option>
                         ))}
                       </select>

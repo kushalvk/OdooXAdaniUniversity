@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Eye, EyeOff, Loader, CheckCircle, AlertCircle, Settings, Shield } from 'lucide-react';
+import { Wrench, Eye, EyeOff, Loader, CheckCircle, AlertCircle, Shield } from 'lucide-react';
 
 const GearGuardAuth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -143,8 +143,8 @@ const GearGuardAuth = () => {
         </div>
 
         <div className="absolute inset-0 opacity-10">
-          <Settings className="absolute top-20 left-20 w-32 h-32 animate-spin-slow" />
-          <Settings className="absolute bottom-32 right-32 w-24 h-24 animate-spin-reverse" />
+          <Wrench className="absolute top-20 left-20 w-32 h-32 animate-spin-slow" />
+          <Wrench className="absolute bottom-32 right-32 w-24 h-24 animate-spin-reverse" />
           <Wrench className="absolute top-1/2 left-1/4 w-20 h-20 animate-bounce-slow" />
         </div>
 
@@ -173,7 +173,7 @@ const GearGuardAuth = () => {
 
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Settings className="w-5 h-5" />
+                  <Wrench className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Schedule Maintenance</h3>
@@ -207,7 +207,7 @@ const GearGuardAuth = () => {
             className="absolute -top-4 right-0 w-12 h-12 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-180"
             disabled={isAnimating}
           >
-            <Settings className="w-5 h-5 text-orange-400" />
+            <Wrench className="w-5 h-5 text-orange-400" />
           </button>
 
           <div className={`bg-slate-800/50 backdrop-blur-xl border border-slate-700 rounded-2xl p-8 shadow-2xl transition-all duration-400 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>

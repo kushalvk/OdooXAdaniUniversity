@@ -32,6 +32,15 @@ const PrivateRoute = ({ children }) => {
   return <Navigate to="/signin" />;
 };
 
+// Landing route that redirects authenticated users to dashboard
+const LandingRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    return <Navigate to="/dashboard" />;
+  }
+  return children;
+};
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -89,7 +98,7 @@ function App() {
       />
       <Routes>
         {/* The LandingPage component is now used for the root path */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingRoute><LandingPage /></LandingRoute>} />
 
         {/* Your other routes remain the same */}
         <Route path="/signup" element={<SignUp />} />
@@ -116,7 +125,7 @@ function App() {
         />
         <Route
           path="/profile"
-          element={<PrivateRoute user={user} onLogout={handleLogout}><Profile /></PrivateRoute>}
+          element={<PrivateRoute user={user} onLogout={handleLogout}><Profile user={user} onLogout={handleLogout} /></PrivateRoute>}
         />
         <Route
           path="/activity"
