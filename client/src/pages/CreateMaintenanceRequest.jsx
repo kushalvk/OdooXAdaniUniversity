@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-export default function CreateMaintenanceRequest({ user, onLogout }) {
+export default function CreateMaintenanceRequest({ user }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -156,7 +156,7 @@ export default function CreateMaintenanceRequest({ user, onLogout }) {
         throw new Error(error.message || 'Failed to create maintenance request');
       }
 
-      const result = await response.json();
+      // const result = await response.json();
       toast.success(saveAsDraft ? 'Request saved as draft' : 'Maintenance request created successfully');
       navigate('/maintenance');
     } catch (error) {
