@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { FaUserCircle, FaEnvelope, FaUserTag, FaIdBadge, FaEdit, FaSave, FaTimes, FaPhone, FaVenusMars, FaCamera, FaSpinner, FaCalendar, FaMapMarkerAlt, FaBriefcase, FaGraduationCap, FaGlobe, FaLinkedin, FaTwitter, FaInstagram, FaGithub } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import MainNavigation from '../components/common/MainNavigation';
 
 // Real API functions
 const getProfile = async (email) => {
@@ -71,7 +72,7 @@ const getUserEmail = () => {
   }
 };
 
-const Profile = () => {
+const Profile = ({ user: propUser, onLogout }) => {
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ 
@@ -101,51 +102,56 @@ const Profile = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/signin');
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await fetch('/api/profile/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            localStorage.removeItem('token');
-            navigate('/signin');
-          }
-          throw new Error('Failed to fetch user data');
-        }
-
-        const userData = await response.json();
-        setUser(userData);
+    if (propUser) {
+      setUser(propUser);
+      setForm({
+        firstName: propUser.firstName || '',
+        lastName: propUser.lastName || '',
+        email: propUser.email || '',
+        username: propUser.username || '',
+        phoneNumber: propUser.phoneNumber || '',
+        gender: propUser.gender || '',
+        location: propUser.location || '',
+        occupation: propUser.occupation || '',
+        education: propUser.education || '',
+        bio: propUser.bio || '',
+        website: propUser.website || '',
+        linkedin: propUser.linkedin || '',
+        twitter: propUser.twitter || '',
+        instagram: propUser.instagram || '',
+        github: propUser.github || ''
+      });
+      setAvatarPreview(propUser.avatar || '');
+      setLoading(false);
+    } else {
+      // If no user prop, try to get from localStorage or redirect
+      const storedUser = getUserFromLocalStorage();
+      if (storedUser) {
+        setUser(storedUser);
         setForm({
-          firstName: userData.firstName || '',
-          lastName: userData.lastName || '',
-          email: userData.email || '',
-          username: userData.username || '',
-          phoneNumber: userData.phoneNumber || '',
-          gender: userData.gender || '',
+          firstName: storedUser.firstName || '',
+          lastName: storedUser.lastName || '',
+          email: storedUser.email || '',
+          username: storedUser.username || '',
+          phoneNumber: storedUser.phoneNumber || '',
+          gender: storedUser.gender || '',
+          location: storedUser.location || '',
+          occupation: storedUser.occupation || '',
+          education: storedUser.education || '',
+          bio: storedUser.bio || '',
+          website: storedUser.website || '',
+          linkedin: storedUser.linkedin || '',
+          twitter: storedUser.twitter || '',
+          instagram: storedUser.instagram || '',
+          github: storedUser.github || ''
         });
-        setAvatarPreview(userData.avatar || '');
+        setAvatarPreview(storedUser.avatar || '');
         setLoading(false);
-
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        setError('Failed to load profile. Please try again later.');
-        setLoading(false);
+      } else {
+        navigate('/signin');
       }
-    };
-
-    fetchUserData();
-  }, [navigate]);
+    }
+  }, [propUser, navigate]);
 
   const handleEdit = () => {
     // Reset form and avatar preview to current user state when opening modal
@@ -256,7 +262,11 @@ const Profile = () => {
   }
 
   return (
-    <ProfileContainer>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      {/* Main Navigation */}
+      <MainNavigation user={user} onLogout={onLogout} />
+
+      <ProfileContainer>
       {showSuccessToast && (
         <Toast
           message="Profile updated successfully!"
@@ -488,6 +498,7 @@ const Profile = () => {
         </ModalOverlay>
       )}
     </ProfileContainer>
+    </div>
   );
 };
 

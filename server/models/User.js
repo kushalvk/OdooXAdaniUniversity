@@ -57,6 +57,22 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         sparse: true,
     },
+    location: {
+        type: String,
+        required: false,
+        trim: true,
+    },
+    occupation: {
+        type: String,
+        required: false,
+        trim: true,
+    },
+    bio: {
+        type: String,
+        required: false,
+        trim: true,
+        maxlength: 500,
+    },
     // Password reset fields
     resetPasswordToken: {
         type: String,

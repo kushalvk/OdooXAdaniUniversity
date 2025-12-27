@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Wrench, Settings, Shield, TrendingUp, Clock, Users, CheckCircle, BarChart3, AlertCircle, FileText, Zap, Database } from 'lucide-react';
+import { Wrench, Shield, TrendingUp, Clock, Users, CheckCircle, BarChart3, AlertCircle, FileText, Zap, Database } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const GearGuardLanding = () => {
@@ -83,7 +83,7 @@ const GearGuardLanding = () => {
             {[
               { number: '99.9%', label: 'Uptime', icon: TrendingUp },
               { number: '500+', label: 'Companies', icon: Users },
-              { number: '50K+', label: 'Equipment', icon: Settings },
+              { number: '50K+', label: 'Equipment', icon: Wrench },
               { number: '24/7', label: 'Support', icon: Clock }
             ].map((stat, index) => (
               <div
@@ -124,7 +124,7 @@ const GearGuardLanding = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {[
             {
-              icon: Settings,
+              icon: Wrench,
               title: 'Equipment Tracking',
               description: 'Comprehensive database of all your equipment with detailed specifications, locations, and usage history.',
               gradient: 'from-orange-500 to-orange-600'

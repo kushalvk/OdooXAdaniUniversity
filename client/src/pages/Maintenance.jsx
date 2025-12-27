@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wrench, Settings, Search, Plus } from 'lucide-react';
+import { Wrench, Search, Plus } from 'lucide-react';
 import { getAllMaintenanceRequests } from '../api/maintenance.api';
+import MainNavigation from '../components/common/MainNavigation';
 
 export default function Maintenance({ user }) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('Maintenance');
   const [maintenanceData, setMaintenanceData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const tabs = ['Maintenance', 'Dashboard', 'Maintenance Calendar', 'Equipment', 'Reporting', 'Teams'];
 
   useEffect(() => {
     const fetchMaintenanceRequests = async () => {
@@ -29,68 +27,8 @@ export default function Maintenance({ user }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100">
-      {/* Header */}
-      <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-2 rounded-lg">
-                <Wrench className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                GearGuard
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
-                <Settings className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => navigate('/profile')}
-                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-cyan-400 transition-all cursor-pointer"
-                title="View Profile"
-              >
-                {user ? (user.name ? user.name.charAt(0).toUpperCase() : user.firstName?.charAt(0).toUpperCase() || 'U') : 'U'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Navigation Tabs */}
-      <nav className="bg-slate-900/30 backdrop-blur-sm border-b border-slate-700">
-        <div className="px-6">
-          <div className="flex items-center space-x-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  if (tab === 'Dashboard') {
-                    navigate('/dashboard');
-                  } else if (tab === 'Maintenance Calendar') {
-                    navigate('/maintenance-calendar');
-                  } else if (tab === 'Equipment') {
-                    navigate('/equipment');
-                  } else if (tab === 'Reporting') {
-                    navigate('/reporting');
-                  } else if (tab === 'Teams') {
-                    navigate('/teams');
-                  } else {
-                    setActiveTab(tab);
-                  }
-                }}
-                className={`px-4 py-3 font-medium transition-all ${
-                  activeTab === tab
-                    ? 'text-cyan-400 border-b-2 border-cyan-400'
-                    : 'text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+      {/* Main Navigation */}
+      <MainNavigation user={user} />
 
       {/* Main Content */}
       <main className="px-6 py-6">

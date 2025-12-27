@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Wrench, Settings, Plus, Edit2, Trash2, Search, Users, Building2, UserPlus, X, Save } from 'lucide-react';
+import { Wrench, Plus, Edit2, Trash2, Search, Users, Building2, UserPlus, X, Save } from 'lucide-react';
+import MainNavigation from '../components/common/MainNavigation';
 
 export default function TeamsManagement({ user, onLogout }) {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -108,32 +109,8 @@ export default function TeamsManagement({ user, onLogout }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100">
-      {/* Header */}
-      <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-2 rounded-lg">
-                <Wrench className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  GearGuard
-                </h1>
-                <p className="text-sm text-gray-400">Teams Management</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
-                <Settings className="w-5 h-5" />
-              </button>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
-                {user?.name?.charAt(0) || 'MA'}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Main Navigation */}
+      <MainNavigation user={user} onLogout={onLogout} />
 
       {/* Main Content */}
       <main className="px-6 py-6">

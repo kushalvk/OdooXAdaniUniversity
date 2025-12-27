@@ -89,7 +89,7 @@ const getProfile = async (req, res) => {
 // @desc    Update user profile
 // @access  Private
 const updateProfile = async (req, res) => {
-    const { firstName, lastName, email, phoneNumber, gender } = req.body;
+    const { firstName, lastName, email, phoneNumber, gender, location, occupation, bio } = req.body;
 
     try {
         const user = await User.findById(req.user.id);
@@ -114,6 +114,15 @@ const updateProfile = async (req, res) => {
         if (gender && user.gender !== gender) {
             changes.push(`updated gender`);
         }
+        if (location && user.location !== location) {
+            changes.push(`updated location`);
+        }
+        if (occupation && user.occupation !== occupation) {
+            changes.push(`updated occupation`);
+        }
+        if (bio && user.bio !== bio) {
+            changes.push(`updated bio`);
+        }
 
         if (changes.length > 0) {
             const description = `User ${changes.join(', ')}.`;
@@ -132,6 +141,9 @@ const updateProfile = async (req, res) => {
             email: email || user.email,
             phoneNumber: phoneNumber || user.phoneNumber,
             gender: gender || user.gender,
+            location: location !== undefined ? location : user.location,
+            occupation: occupation !== undefined ? occupation : user.occupation,
+            bio: bio !== undefined ? bio : user.bio,
         };
 
         // Update user
