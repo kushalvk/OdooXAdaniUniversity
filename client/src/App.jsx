@@ -48,11 +48,23 @@ function App() {
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token');
-      if (token) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get('token');
+
+      if (urlToken) {
+        // Token from OAuth redirect
+        localStorage.setItem('token', urlToken);
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      const finalToken = urlToken || token;
+
+      if (finalToken) {
         try {
           const response = await fetch('http://localhost:5000/api/profile/me', {
             headers: {
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${finalToken}`
             }
           });
 

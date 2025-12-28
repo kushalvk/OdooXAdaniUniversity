@@ -4,6 +4,8 @@ const Otp = require("../models/Otp");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const axios = require("axios");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
@@ -13,7 +15,49 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+// Passport Google OAuth configuration
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://localhost:5000/api/auth/google/callback",
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await User.findOne({ email: profile.emails[0].value });
 
+        if (!user) {
+          user = new User({
+            email: profile.emails[0].value,
+            firstName: profile.name.givenName,
+            lastName: profile.name.familyName,
+            googleId: profile.id,
+            password: Math.random().toString(36).slice(-8), // Random password for OAuth users
+          });
+          await user.save();
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error, null);
+      }
+    }
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
+});
 // Signup
 const signup = async (req, res) => {
   const { username, firstName, lastName, email, password } = req.body;
@@ -426,4 +470,56 @@ const githubCallback = async (req, res) => {
   }
 };
 
-module.exports = { signup, signin, verifyOtp, googleSignin, githubCallback };
+// Google OAuth routes
+const googleAuth = passport.authenticate("google", {
+  scope: ["profile", "email"],
+});
+
+const googleAuthCallback = (req, res) => {
+  passport.authenticate("google", { failureRedirect: "/signin" }, async (err, user) => {
+    if (err) {
+      console.error("Google OAuth error:", err);
+      return res.redirect("http://localhost:5174/signin?error=google_oauth_failed");
+    }
+    if (!user) {
+      return res.redirect("http://localhost:5174/signin?error=google_oauth_failed");
+    }
+
+    try {
+      // Generate JWT token
+      const payload = {
+        user: {
+          id: user.id,
+        },
+      };
+
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: "5h" },
+        (err, token) => {
+          if (err) {
+            console.error("JWT Error:", err);
+            return res.redirect("http://localhost:5174/signin?error=token_generation_failed");
+          }
+
+          // Log login activity
+          const loginActivity = new Activity({
+            user: user._id,
+            activityType: "login",
+            description: "User logged in via Google OAuth.",
+          });
+          loginActivity.save();
+
+          // Redirect to dashboard with token
+          res.redirect(`http://localhost:5174/dashboard?token=${token}`);
+        }
+      );
+    } catch (error) {
+      console.error("Error in Google OAuth callback:", error);
+      res.redirect("http://localhost:5174/signin?error=server_error");
+    }
+  })(req, res);
+};
+
+module.exports = { signup, signin, verifyOtp, googleSignin, googleAuth, googleAuthCallback, githubCallback };

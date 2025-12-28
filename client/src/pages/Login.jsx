@@ -452,7 +452,7 @@ const GearGuardAuth = () => {
                     />
                     <span className="text-slate-400 text-sm">Remember me</span>
                   </label>
-                  <a href="#" className="text-orange-400 text-sm hover:text-orange-300 transition-colors">
+                  <a href="/forgot-password" className="text-orange-400 text-sm hover:text-orange-300 transition-colors">
                     Forgot password?
                   </a>
                 </div>
@@ -487,6 +487,7 @@ const GearGuardAuth = () => {
             {/* Social Login */}
             <button
               type="button"
+              onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
               className="w-full py-3 bg-white hover:bg-gray-50 text-slate-700 font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-3 border border-slate-300"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">

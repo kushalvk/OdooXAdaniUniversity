@@ -13,8 +13,12 @@ if (dotenvResult.error) {
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const passport = require('passport');
 
 const app = express();
+
+// Initialize Passport
+app.use(passport.initialize());
 
 // Allow requests from your frontend development server
 const corsOptions = {
@@ -33,6 +37,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // this line to enable your OTP routes
 app.use('/api/otp', require('./routes/otp.routes.js'));
+app.use('/api/password-reset', require('./routes/passwordReset.routes.js'));
 
 
 const connectDB = require('./config/db');
